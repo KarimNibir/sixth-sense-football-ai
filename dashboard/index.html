@@ -2,440 +2,190 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Sixth Sense — Football AI</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>⚡ The Sixth Sense — Real-Time Football Tactical AI</title>
 <style>
-:root {
-  --bg: #060a12;
-  --surface: #0d1520;
-  --surface2: #131f30;
-  --border: #1c2e45;
-  --accent: #00e5ff;
-  --accent2: #7c3aed;
-  --green: #00e676;
-  --amber: #ffab00;
-  --red: #ff1744;
-  --text: #e8f0fe;
-  --muted: #546e8a;
-  --analyst: #00e5ff;
-  --fan: #ff6ec7;
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif; min-height:100vh; overflow-x:hidden; }
-
-/* ── Header ── */
-header {
-  background: linear-gradient(135deg,#060a12,#0a1628);
-  border-bottom:1px solid var(--border);
-  padding:16px 32px;
-  display:flex; align-items:center; justify-content:space-between;
-}
-.logo { display:flex; align-items:center; gap:10px; }
-.logo-icon { font-size:24px; }
-.logo h1 { font-size:18px; font-weight:800; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-.logo p { font-size:11px; color:var(--muted); margin-top:1px; }
-.score-board { display:flex; gap:20px; align-items:center; }
-.score-box { text-align:center; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:8px 20px; }
-.score-val { font-size:28px; font-weight:800; color:var(--accent); }
-.score-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
-.score-vs { font-size:14px; color:var(--muted); font-weight:600; }
-.status-badge { padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; }
-.status-live { background:rgba(255,23,68,.15); color:var(--red); border:1px solid rgba(255,23,68,.3); animation:pulse 2s infinite; }
-.status-idle { background:rgba(84,110,138,.15); color:var(--muted); border:1px solid var(--border); }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
-
-/* ── Main layout ── */
-main { display:grid; grid-template-columns:1fr 380px; grid-template-rows:auto auto; gap:20px; padding:24px 32px; max-width:1600px; margin:0 auto; }
-
-/* ── Tension meter ── */
-.tension-panel {
-  background:var(--surface); border:1px solid var(--border); border-radius:16px;
-  padding:24px; display:flex; flex-direction:column; gap:16px;
-}
-.panel-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
-.tension-display { display:flex; align-items:flex-end; gap:16px; }
-.tension-number { font-size:72px; font-weight:900; line-height:1; transition:color .5s; }
-.tension-number.low  { color:var(--green); }
-.tension-number.med  { color:var(--amber); }
-.tension-number.high { color:var(--red); text-shadow:0 0 30px rgba(255,23,68,.4); }
-.tension-sub { font-size:14px; color:var(--muted); padding-bottom:10px; }
-.tension-bar-track { height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
-.tension-bar-fill { height:100%; border-radius:4px; transition:width .8s ease, background .5s; }
-
-/* ── Tension history sparkline ── */
-.sparkline { height:60px; display:flex; align-items:flex-end; gap:2px; }
-.spark-bar { flex:1; border-radius:2px 2px 0 0; min-width:4px; transition:height .3s; }
-
-/* ── Patterns ── */
-.patterns-list { display:flex; flex-direction:column; gap:8px; }
-.pattern-chip {
-  display:flex; align-items:center; gap:10px;
-  background:var(--surface2); border-radius:10px; padding:10px 14px;
-  border-left:3px solid var(--accent); animation:slideIn .3s ease;
-}
-.pattern-chip.critical { border-left-color:var(--red); }
-.pattern-chip.high { border-left-color:var(--amber); }
-.pattern-chip.medium { border-left-color:var(--accent); }
-.pattern-chip.low { border-left-color:var(--muted); }
-@keyframes slideIn { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:none} }
-.pattern-name { font-size:13px; font-weight:600; }
-.pattern-desc { font-size:11px; color:var(--muted); margin-top:2px; }
-.severity-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.sev-critical { background:var(--red); box-shadow:0 0 8px var(--red); }
-.sev-high     { background:var(--amber); }
-.sev-medium   { background:var(--accent); }
-.sev-low      { background:var(--muted); }
-.no-patterns  { color:var(--muted); font-size:13px; font-style:italic; text-align:center; padding:20px; }
-
-/* ── Narrative panel ── */
-.narrative-panel {
-  background:var(--surface); border:1px solid var(--border); border-radius:16px;
-  padding:24px; display:flex; flex-direction:column; gap:16px;
-  grid-column:1; grid-row:2;
-}
-.mode-tabs { display:flex; gap:8px; }
-.mode-tab { padding:6px 16px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:none; transition:.2s; }
-.mode-tab.active-analyst { background:rgba(0,229,255,.15); color:var(--analyst); border:1px solid rgba(0,229,255,.3); }
-.mode-tab.active-fan { background:rgba(255,110,199,.15); color:var(--fan); border:1px solid rgba(255,110,199,.3); }
-.mode-tab.inactive { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
-.narrative-text {
-  font-size:15px; line-height:1.7; color:var(--text);
-  background:var(--surface2); border-radius:12px; padding:18px;
-  border-left:3px solid var(--accent); min-height:100px;
-  transition:opacity .3s;
-}
-.narrative-text.fan-mode { border-left-color:var(--fan); }
-.minute-badge { font-size:11px; color:var(--muted); }
-
-/* ── Right sidebar ── */
-.sidebar { grid-column:2; grid-row:1/3; display:flex; flex-direction:column; gap:16px; }
-
-.controls-panel {
-  background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px;
-}
-.team-selects { display:flex; gap:10px; margin-top:12px; }
-select {
-  flex:1; background:var(--surface2); color:var(--text); border:1px solid var(--border);
-  border-radius:8px; padding:8px 10px; font-size:13px;
-}
-.btn-start {
-  width:100%; margin-top:12px; padding:12px; border-radius:10px; border:none;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:white; font-size:14px; font-weight:700; cursor:pointer; transition:.2s;
-}
-.btn-start:hover { opacity:.9; transform:translateY(-1px); }
-.btn-start:disabled { opacity:.4; cursor:not-allowed; transform:none; }
-
-.stats-panel {
-  background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px;
-}
-.stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
-.stat-item { background:var(--surface2); border-radius:8px; padding:10px; text-align:center; }
-.stat-val { font-size:20px; font-weight:700; color:var(--accent); }
-.stat-key { font-size:10px; color:var(--muted); text-transform:uppercase; margin-top:2px; }
-
-.events-panel {
-  background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px;
-  flex:1;
-}
-.events-list { margin-top:12px; display:flex; flex-direction:column; gap:6px; max-height:240px; overflow-y:auto; }
-.event-row { display:flex; align-items:center; gap:8px; font-size:12px; padding:6px 10px; background:var(--surface2); border-radius:6px; }
-.event-type { font-weight:600; color:var(--accent); min-width:80px; }
-.event-player { color:var(--muted); flex:1; }
-.event-min { color:var(--muted); font-size:10px; white-space:nowrap; }
-.event-goal { background:rgba(0,230,118,.1); border:1px solid rgba(0,230,118,.2); }
-.event-shot { background:rgba(255,171,0,.08); }
-
-/* ── Overlay pitch hint ── */
-.pitch-overlay {
-  grid-column:1; position:relative;
-  background:var(--surface); border:1px solid var(--border); border-radius:16px;
-  overflow:hidden; height:120px; display:flex; align-items:center; justify-content:center;
-}
-.pitch-bg { position:absolute; inset:0; background:linear-gradient(90deg,rgba(0,229,255,.03) 0%,rgba(0,229,255,.08) 100%); }
-.pitch-text { font-size:12px; color:var(--muted); z-index:1; }
-.hotspot { position:absolute; border-radius:50%; animation:hotpulse 2s infinite; }
-@keyframes hotpulse { 0%,100%{transform:scale(1);opacity:.6} 50%{transform:scale(1.4);opacity:1} }
-
-/* ── Progress bar ── */
-.progress-wrap { margin-top:8px; }
-.progress-track { height:4px; background:var(--border); border-radius:2px; }
-.progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; transition:width .5s; }
-.progress-label { display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-top:4px; }
+:root{--bg:#080c14;--surf:#0f1923;--surf2:#162032;--border:#1e3050;--accent:#00d4ff;--accent2:#7c3aed;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--text:#e2e8f0;--muted:#64748b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh}
+header{background:linear-gradient(135deg,#080c14,#0d1a2e 60%,#0a1628);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo h1{font-size:17px;font-weight:700}
+.logo p{font-size:11px;color:var(--muted)}
+.hbadge{background:var(--surf2);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:11px;color:var(--muted)}
+.hbadge span{color:var(--accent);font-weight:600}
+.ldot{width:8px;height:8px;background:var(--red);border-radius:50%;animation:pulse 1.5s infinite;display:inline-block;margin-right:6px}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.mode-bar{background:var(--surf);border-bottom:1px solid var(--border);padding:0 32px;display:flex}
+.mbtn{padding:13px 24px;font-size:13px;font-weight:600;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.mbtn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.scoreboard{background:var(--surf);border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;justify-content:space-between}
+.teams{display:flex;align-items:center;gap:20px}
+.tname{font-size:15px;font-weight:700}
+.score{font-size:28px;font-weight:800;color:var(--accent)}
+.sep{font-size:20px;color:var(--muted)}
+.mtime{font-size:13px;color:var(--muted)}
+.mtime span{color:var(--amber);font-weight:600}
+.tsec{background:var(--surf);border-bottom:1px solid var(--border);padding:14px 32px}
+.thead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.tlabel{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.tval{font-size:26px;font-weight:800;transition:color .5s}
+.ttrack{height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.tfill{height:100%;border-radius:4px;transition:width 1s ease,background .5s}
+main{display:grid;grid-template-columns:1fr 380px;height:calc(100vh - 205px);overflow:hidden}
+.left{padding:24px 32px;overflow-y:auto;border-right:1px solid var(--border)}
+.right{padding:24px;overflow-y:auto;background:var(--surf)}
+.stitle{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
+.spark-wrap{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px}
+.mc{background:var(--surf);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden;cursor:pointer;transition:border-color .2s}
+.mc:hover{border-color:rgba(0,212,255,.4)}
+.mc.active{border-color:var(--accent)}
+.mh{padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.mmin{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase}
+.mten{font-size:18px;font-weight:800}
+.mpats{padding:0 16px 10px;display:flex;flex-wrap:wrap;gap:6px}
+.ptag{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);color:var(--accent);font-size:10px;padding:3px 8px;border-radius:20px}
+.imode{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.imin{font-size:13px;color:var(--accent);font-weight:600}
+.ibadge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-top:6px}
+.itext{font-size:14px;line-height:1.75;color:var(--text);padding:16px;border-radius:8px;border-left:3px solid var(--accent);background:rgba(0,212,255,.04);margin-top:14px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.sbox{background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:12px}
+.sval{font-size:20px;font-weight:700;color:var(--accent)}
+.slbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+footer{padding:10px 32px;background:var(--surf);border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
+footer span{color:var(--text);font-weight:600}
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo">
     <div class="logo-icon">⚡</div>
-    <div>
-      <h1>THE SIXTH SENSE</h1>
-      <p>Real-time football tactical intelligence · Microsoft Premier League Hackathon</p>
-    </div>
+    <div><h1>The Sixth Sense</h1><p>Real-Time Football Tactical Intelligence · Microsoft Premier League Hackathon 2026</p></div>
   </div>
-  <div class="score-board">
-    <div class="score-box">
-      <div class="score-val" id="home-score">0</div>
-      <div class="score-label" id="home-name">Home</div>
-    </div>
-    <div class="score-vs">VS</div>
-    <div class="score-box">
-      <div class="score-val" id="away-score">0</div>
-      <div class="score-label" id="away-name">Away</div>
-    </div>
-    <div class="status-badge status-idle" id="status-badge">IDLE</div>
-  </div>
+  <div class="hbadge"><span class="ldot"></span>LIVE DEMO</div>
 </header>
-
+<div class="mode-bar">
+  <button class="mbtn active" onclick="setMode('analyst')" id="ba">🔬 Tactical Analyst</button>
+  <button class="mbtn" onclick="setMode('fan')" id="bf">🎉 Casual Fan</button>
+</div>
+<div class="scoreboard">
+  <div class="teams">
+    <span class="tname" id="hn">—</span>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="score" id="hs">0</span><span class="sep">–</span><span class="score" id="as">0</span>
+    </div>
+    <span class="tname" id="an">—</span>
+  </div>
+  <div class="mtime">Minute <span id="cm">—</span></div>
+</div>
+<div class="tsec">
+  <div class="thead"><span class="tlabel">⚡ Tactical Tension Score</span><span class="tval" id="tv">0</span></div>
+  <div class="ttrack"><div class="tfill" id="tf" style="width:0%"></div></div>
+</div>
 <main>
-  <!-- Tension panel -->
-  <div class="tension-panel">
-    <div class="panel-label">Tactical Tension Index</div>
-    <div class="tension-display">
-      <div class="tension-number low" id="tension-num">0</div>
-      <div class="tension-sub">
-        <div id="tension-label" style="font-size:16px;font-weight:700;color:var(--green)">Quiet</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">Minute <span id="match-minute">0</span>'</div>
-      </div>
-    </div>
-    <div class="tension-bar-track">
-      <div class="tension-bar-fill" id="tension-bar" style="width:0%;background:var(--green)"></div>
-    </div>
-    <div class="progress-wrap">
-      <div class="progress-track"><div class="progress-fill" id="match-progress" style="width:0%"></div></div>
-      <div class="progress-label"><span>0'</span><span id="events-label">0 events</span><span>90'</span></div>
-    </div>
-    <div class="panel-label" style="margin-top:8px">Tension History</div>
-    <div class="sparkline" id="sparkline"></div>
-    <div class="panel-label" style="margin-top:8px">Detected Patterns</div>
-    <div class="patterns-list" id="patterns-list">
-      <div class="no-patterns">Waiting for match data...</div>
-    </div>
+  <div class="left">
+    <div class="stitle">Tension Timeline</div>
+    <div class="spark-wrap"><svg id="spark" width="100%" height="90" viewBox="0 0 700 90" preserveAspectRatio="none"></svg></div>
+    <div class="stitle">Key Moments</div>
+    <div id="ml"></div>
   </div>
-
-  <!-- Narrative panel -->
-  <div class="narrative-panel">
-    <div class="panel-label">AI Tactical Intelligence</div>
-    <div class="mode-tabs">
-      <button class="mode-tab active-analyst" id="tab-analyst" onclick="setMode('analyst')">🔬 Analyst</button>
-      <button class="mode-tab inactive" id="tab-fan" onclick="setMode('fan')">👥 Fan</button>
-    </div>
-    <div class="narrative-text" id="narrative-box">
-      Start a match to begin receiving real-time tactical intelligence...
-    </div>
-    <div class="minute-badge">Last updated: minute <span id="narrative-minute">—</span></div>
-  </div>
-
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <!-- Controls -->
-    <div class="controls-panel">
-      <div class="panel-label">Match Setup</div>
-      <div class="team-selects">
-        <select id="home-select">
-          <option value="Manchester City">Manchester City</option>
-          <option value="Arsenal" selected>Arsenal</option>
-          <option value="Liverpool">Liverpool</option>
-          <option value="Chelsea">Chelsea</option>
-        </select>
-        <select id="away-select">
-          <option value="Arsenal">Arsenal</option>
-          <option value="Manchester City" selected>Manchester City</option>
-          <option value="Liverpool">Liverpool</option>
-          <option value="Chelsea">Chelsea</option>
-        </select>
-      </div>
-      <button class="btn-start" id="start-btn" onclick="startMatch()">▶ Start Match Simulation</button>
-    </div>
-
-    <!-- Live stats -->
-    <div class="stats-panel">
-      <div class="panel-label">Window Statistics</div>
-      <div class="stats-grid">
-        <div class="stat-item"><div class="stat-val" id="s-passes">0</div><div class="stat-key">Passes</div></div>
-        <div class="stat-item"><div class="stat-val" id="s-accuracy">0%</div><div class="stat-key">Accuracy</div></div>
-        <div class="stat-item"><div class="stat-val" id="s-shots">0</div><div class="stat-key">Shots</div></div>
-        <div class="stat-item"><div class="stat-val" id="s-press">0</div><div class="stat-key">Pressures</div></div>
-        <div class="stat-item"><div class="stat-val" id="s-danger">0%</div><div class="stat-key">Danger Zone</div></div>
-        <div class="stat-item"><div class="stat-val" id="s-fwd">0%</div><div class="stat-key">Fwd Pass Rate</div></div>
-      </div>
-    </div>
-
-    <!-- Event feed -->
-    <div class="events-panel">
-      <div class="panel-label">Live Event Feed</div>
-      <div class="events-list" id="events-list">
-        <div style="color:var(--muted);font-size:12px;padding:10px;text-align:center">No events yet</div>
-      </div>
+  <div class="right">
+    <div class="imode" id="iml">Tactical Analyst Mode</div>
+    <div class="imin" id="imn">Select a moment →</div>
+    <div class="ibadge" id="ib">—</div>
+    <div class="itext" id="it">Click any key moment on the left to see the AI tactical insight for that point in the match.</div>
+    <div class="stitle" style="margin-top:18px">Match State at This Moment</div>
+    <div class="sgrid">
+      <div class="sbox"><div class="sval" id="sp">—</div><div class="slbl">Passes (window)</div></div>
+      <div class="sbox"><div class="sval" id="sa">—</div><div class="slbl">Pass Accuracy</div></div>
+      <div class="sbox"><div class="sval" id="ss">—</div><div class="slbl">Shots</div></div>
+      <div class="sbox"><div class="sval" id="spr">—</div><div class="slbl">Pressures</div></div>
+      <div class="sbox"><div class="sval" id="sd">—</div><div class="slbl">Danger Zone %</div></div>
+      <div class="sbox"><div class="sval" id="sf">—</div><div class="slbl">Forward Pass %</div></div>
     </div>
   </div>
 </main>
-
+<footer>Powered by <span>Azure AI · gpt-4o-mini via GitHub Models</span> &nbsp;·&nbsp; <span>Azure Container Apps</span> &nbsp;·&nbsp; <span>StatsBomb-schema Synthetic Data</span> &nbsp;·&nbsp; Microsoft Premier League Hackathon 2026</footer>
 <script>
-let currentMode = 'analyst';
-let tickInterval = null;
-let totalEvents = 0;
-let narrativeData = { analyst: '', fan: '' };
+const DATA=JSON.parse(atob('eyJob21lIjoiTWFuY2hlc3RlciBDaXR5IiwiYXdheSI6IkFyc2VuYWwiLCJzY29yZSI6eyJob21lIjoxLCJhd2F5IjoyfSwidGltZWxpbmUiOlt7Im1pbnV0ZSI6MywidGVuc2lvbiI6NTQuNSwicGF0dGVybnMiOltdfSx7Im1pbnV0ZSI6NiwidGVuc2lvbiI6NDguNCwicGF0dGVybnMiOltdfSx7Im1pbnV0ZSI6OSwidGVuc2lvbiI6ODEuNSwicGF0dGVybnMiOlsiSGlnaCBQcmVzcyBCdWlsZGluZyJdfSx7Im1pbnV0ZSI6MTIsInRlbnNpb24iOjE1LjAsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjE1LCJ0ZW5zaW9uIjo4LjcsInBhdHRlcm5zIjpbIkRlZmVuc2l2ZSBSZXNldCBVbmRlciBQcmVzc3VyZSJdfSx7Im1pbnV0ZSI6MTgsInRlbnNpb24iOjU2LjIsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjIxLCJ0ZW5zaW9uIjo5LjUsInBhdHRlcm5zIjpbIkRlZmVuc2l2ZSBSZXNldCBVbmRlciBQcmVzc3VyZSJdfSx7Im1pbnV0ZSI6MjQsInRlbnNpb24iOjM5LjEsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjI3LCJ0ZW5zaW9uIjo5LjgsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjMwLCJ0ZW5zaW9uIjo4LjEsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjMzLCJ0ZW5zaW9uIjo4LjAsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjM2LCJ0ZW5zaW9uIjo5LjcsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjM5LCJ0ZW5zaW9uIjo5LjUsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjQyLCJ0ZW5zaW9uIjozOC4xLCJwYXR0ZXJucyI6W119LHsibWludXRlIjo0NSwidGVuc2lvbiI6NDYuOSwicGF0dGVybnMiOltdfSx7Im1pbnV0ZSI6NDgsInRlbnNpb24iOjEwLjcsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjUxLCJ0ZW5zaW9uIjo0LjIsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjU0LCJ0ZW5zaW9uIjo3LjMsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjU3LCJ0ZW5zaW9uIjozOS4yLCJwYXR0ZXJucyI6W119LHsibWludXRlIjo2MCwidGVuc2lvbiI6OS4xLCJwYXR0ZXJucyI6W119LHsibWludXRlIjo2MywidGVuc2lvbiI6NC45LCJwYXR0ZXJucyI6W119LHsibWludXRlIjo2NiwidGVuc2lvbiI6MTIuOSwicGF0dGVybnMiOlsiSGlnaCBQcmVzcyBCdWlsZGluZyJdfSx7Im1pbnV0ZSI6NjksInRlbnNpb24iOjE0LjIsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjcyLCJ0ZW5zaW9uIjoxMS4zLCJwYXR0ZXJucyI6W119LHsibWludXRlIjo3NSwidGVuc2lvbiI6Ni45LCJwYXR0ZXJucyI6W119LHsibWludXRlIjo3OCwidGVuc2lvbiI6Ni41LCJwYXR0ZXJucyI6W119LHsibWludXRlIjo4MSwidGVuc2lvbiI6MTguMiwicGF0dGVybnMiOltdfSx7Im1pbnV0ZSI6ODQsInRlbnNpb24iOjEwLjEsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjg3LCJ0ZW5zaW9uIjo5LjgsInBhdHRlcm5zIjpbXX0seyJtaW51dGUiOjkwLCJ0ZW5zaW9uIjoxNy44LCJwYXR0ZXJucyI6WyJEZWZlbnNpdmUgUmVzZXQgVW5kZXIgUHJlc3N1cmUiXX1dLCJrZXlfbW9tZW50cyI6W3sibWludXRlIjozLCJ0ZW5zaW9uIjo1NC41LCJzdGF0cyI6eyJtaW51dGUiOjMuMCwicGFzc2VzIjo0LjAsInNob3RzIjoxLjAsInByZXNzdXJlcyI6My4wLCJwYXNzX2FjY3VyYWN5IjoxMDAuMCwiaW5fZGFuZ2VyX3pvbmVfcGN0Ijo0MC4wLCJ0ZWFtc19pbl93aW5kb3ciOlsiQXJzZW5hbCIsIk1hbmNoZXN0ZXIgQ2l0eSJdLCJmb3J3YXJkX3Bhc3NfcmF0ZSI6NzUuMH0sInBhdHRlcm5zIjpbXSwiYW5hbHlzdCI6IlRoZSBoaWdoIHRlbnNpb24gc2NvcmUgb2YgNTQuNS8xMDAgaXMgZHJpdmVuIGJ5IGFnZ3Jlc3NpdmUgZWFybHktZ2FtZSBkeW5hbWljcywgd2hlcmUgYSA3NSUgZm9yd2FyZCBwYXNzIHJhdGUgYW5kIDQwJSBvZiBldmVudHMgb2NjdXJyaW5nIGluIHRoZSBkYW5nZXIgem9uZSBpbmRpY2F0ZSBhIGhpZ2gtcmlzayB2ZXJ0aWNhbCB0cmFuc2l0aW9uIHN0cmF0ZWd5IHJhdGhlciB0aGFuIGNvbnNlcnZhdGl2ZSBwb3NzZXNzaW9uLiBXaXRoIG5vIGVzdGFibGlzaGVkIHRhY3RpY2FsIHBhdHRlcm5zIHlldCwgdGhlIDEwMCUgcGFzcyBhY2N1cmFjeSBvdmVyIHRoZSBmaXJzdCBmb3VyIGJhbGxzIHN1Z2dlc3RzIGNvbnRyb2xsZWQgYnVpbGR1cCwgYnV0IHRoZSBzaW5nbGUgc2hvdCBhbmQgdGhyZWUgcHJlc3N1cmUgZXZlbnRzIHNpZ25hbCBhbiBpbW1lZGlhdGUgYXR0ZW1wdCB0byBieXBhc3MgbWlkZmllbGQgcmVzaXN0YW5jZSB0aHJvdWdoIGRpcmVjdCBwcm9ncmVzc2lvbi5cblxuV2F0Y2ggZm9yIGEgaGlnaC1saW5lIGRlZmVuc2l2ZSBsaW5lIHRvIGJlIGV4cGxvaXRlZCBpZiB0aGUgb3Bwb3NpdGlvbiBmYWlscyB0byBjbGVhciB0aGUgNzUlIGZvcndhcmQgcHJlc3N1cmUsIG9yIGZvciBhIHJhcGlkIGNvdW50ZXItYXR0YWNrIGlmIHRoZSBpbml0aWFsIHNob3QgY2xlYXJzIHRvIHRoZSBmbGFua3MsIGFzIHRoZSBsYWNrIG9mIGRldGVjdGVkIHBhdHRlcm5zIGxlYXZlcyBzcGF0aWFsIGdhcHMgaW4gdGhlIHdpZGUgY2hhbm5lbHMgdnVsbmVyYWJsZSB0byBxdWljayB0cmFuc2l0aW9ucy4iLCJmYW4iOiJUaGV5XHUyMDE5dmUgYWxyZWFkeSBoaXQgdGhlIGdhcywgc3VyZ2luZyBkb3duIHRoZSBwaXRjaCB3aXRoIHBlcmZlY3QgY29udHJvbCBqdXN0IG1pbnV0ZXMgaW4hIFdpdGggdGhlIHByZXNzdXJlIG1vdW50aW5nIGFuZCBzaG90cyBmbHlpbmcgdG93YXJkIHRoZSBnb2FsLCBpdFx1MjAxOXMgY2xlYXIgdGhpcyBvbmUgaXMgc3RhcnRpbmcgdG8gaGVhdCB1cCBmYXN0ISJ9LHsibWludXRlIjo2LCJ0ZW5zaW9uIjo0OC40LCJzdGF0cyI6eyJtaW51dGUiOjYuMCwicGFzc2VzIjo3LjAsInNob3RzIjoxLjAsInByZXNzdXJlcyI6MS4wLCJwYXNzX2FjY3VyYWN5Ijo1Ny4wOTk5OTg0NzQxMjEwOTQsImluX2Rhbmdlcl96b25lX3BjdCI6Ni42OTk5OTk4MDkyNjUxMzcsInRlYW1zX2luX3dpbmRvdyI6WyJBcnNlbmFsIiwiTWFuY2hlc3RlciBDaXR5Il0sImZvcndhcmRfcGFzc19yYXRlIjo3MS40MDAwMDE1MjU4Nzg5fSwicGF0dGVybnMiOltdLCJhbmFseXN0IjoiV2l0aCBhIGhpZ2ggZm9yd2FyZCBwYXNzIHJhdGUgb2YgNzElIG9mZnNldCBieSBhIGxvdyA1NyUgY29tcGxldGlvbiBhY2N1cmFjeSwgdGhlIHRlYW0gaXMgYXR0ZW1wdGluZyBoaWdoLXJpc2sgdmVydGljYWwgdHJhbnNpdGlvbnMgdGhhdCBhcmUgY3VycmVudGx5IGZhaWxpbmcgdG8gYnJlYWsgdGhlIGRlZmVuc2l2ZSBibG9jaywga2VlcGluZyB0aGUgdGVuc2lvbiBzY29yZSBtb2RlcmF0ZSBhdCA0OC40LiBXYXRjaCBmb3IgYSByZWN1cnJlbmNlIG9mIHRoZSAxOjEgcHJlc3N1cmUgZXZlbnQgaW4gdGhlIGZpbmFsIHRoaXJkLCBhcyB0aGUgbG93IDYuNyUgZGFuZ2VyIHpvbmUgYWN0aXZpdHkgc3VnZ2VzdHMgdGhlIGF0dGFja2luZyBzaWRlIGlzIHN0cnVnZ2xpbmcgdG8gY29udmVydCB0aGVpciBhZ2dyZXNzaXZlIHBhc3NpbmcgaW50ZW50IGludG8gZ2VudWluZSBzY29yaW5nIG9wcG9ydHVuaXRpZXMuIiwiZmFuIjoiVGhlIGhvbWUgdGVhbSBpcyBwbGF5aW5nIGl0IHNhZmUgd2l0aCBzaG9ydCwgaGVzaXRhbnQgdG91Y2hlcywgd2FzdGluZyBwcmVjaW91cyB0aW1lIGluIHRoaXMgZWFybHkgc3RhZ2UuIEl0XHUyMDE5cyBhIHB1enpsZSBvZiBtaXhlZCBzaWduYWxzIHdpdGggdGhhdCBzaGFreSBwYXNzaW5nIGFjY3VyYWN5LCBidXQganVzdCB3YWl0XHUyMDE0d2hlbiB0aGV5IGZpbmFsbHkgY29tbWl0IHRvIGEgc2hhcnAgZm9yd2FyZCBydW4sIHRoZSB3aG9sZSBzdGFkaXVtIGlzIGdvaW5nIHRvIGV4cGxvZGUhIn0seyJtaW51dGUiOjksInRlbnNpb24iOjgxLjUsInN0YXRzIjp7Im1pbnV0ZSI6OS4wLCJwYXNzZXMiOjQuMCwic2hvdHMiOjEuMCwicHJlc3N1cmVzIjo3LjAsInBhc3NfYWNjdXJhY3kiOjc1LjAsImluX2Rhbmdlcl96b25lX3BjdCI6Ni42OTk5OTk4MDkyNjUxMzcsInRlYW1zX2luX3dpbmRvdyI6WyJBcnNlbmFsIiwiTWFuY2hlc3RlciBDaXR5Il0sImZvcndhcmRfcGFzc19yYXRlIjoyNS4wfSwicGF0dGVybnMiOlsiSGlnaCBQcmVzcyBCdWlsZGluZyJdLCJhbmFseXN0IjoiV2l0aCA3IHByZXNzdXJlIGV2ZW50cyBmb3JjaW5nIGEgbWVyZSA3NSUgcGFzcyBhY2N1cmFjeSBhbmQgb25seSAyNSUgb2YgbGlua3MgbW92aW5nIGZvcndhcmQsIHRoZSBoaWdoIHByZXNzIGlzIHN0cmFuZ2xpbmcgdGhlIGJ1aWxkLXVwLCBkcml2aW5nIHRoZSB0ZW5zaW9uIHRvIDgxLjUgYXMgdGhlIGRlZmVuc2l2ZSBsaW5lIHN1ZmZvY2F0ZXMgdGhlIG9wcG9zaXRpb25cdTIwMTlzIGV4aXQgcm91dGVzLiBXYXRjaCB0aGUgZmxhbmsgZm9yIGEgdmVydGljYWwgc3dpdGNoIGluIHRoZSBuZXh0IDMtNSBtaW51dGVzLCBhcyB0aGUgbG93IGZvcndhcmQgcGFzcyByYXRlIHN1Z2dlc3RzIHRoZSB0ZWFtIGlzIGhvYXJkaW5nIHBvc3Nlc3Npb24gdG8gYnlwYXNzIHRoZSBtaWQtYmxvY2sgYmVmb3JlIGxhdW5jaGluZyBhIGRpcmVjdCB0cmFuc2l0aW9uLiIsImZhbiI6Ikp1c3QgbmluZSBtaW51dGVzIGluLCBhbmQgdGhleVx1MjAxOXJlIGFscmVhZHkgc21vdGhlcmluZyB0aGUgZGVmZW5zZSEgV2l0aCBzZXZlbiBodWdlIHRhY2tsZXMgYW5kIGEgcmVsZW50bGVzcyBodW50IGZvciB0aGUgYmFsbCwgdGhlIHRlbnNpb24gaXMgb2ZmIHRoZSBjaGFydHMuIFlvdSBjYW4gZmVlbCB0aGUgaGVhdnkgdGh1ZCBvZiBib290czsgdGhpcyBpc24ndCBqdXN0IGEgZ2FtZSwgaXQncyBhIGZpZ2h0IGZvciBzdXJ2aXZhbCwgYW5kIHdlIGFyZSByaWdodCBoZXJlIGZvciBpdCEifSx7Im1pbnV0ZSI6MTgsInRlbnNpb24iOjU2LjIsInN0YXRzIjp7Im1pbnV0ZSI6MTguMCwicGFzc2VzIjo0LjAsInNob3RzIjoxLjAsInByZXNzdXJlcyI6Mi4wLCJwYXNzX2FjY3VyYWN5Ijo3NS4wLCJpbl9kYW5nZXJfem9uZV9wY3QiOjUzLjI5OTk5OTIzNzA2MDU1LCJ0ZWFtc19pbl93aW5kb3ciOlsiQXJzZW5hbCIsIk1hbmNoZXN0ZXIgQ2l0eSJdLCJmb3J3YXJkX3Bhc3NfcmF0ZSI6NzUuMH0sInBhdHRlcm5zIjpbXSwiYW5hbHlzdCI6IlRoZSB0ZW5zaW9uIHNjb3JlIG9mIDU2LjIgcmVmbGVjdHMgdGhlIGRhbmdlcm91cyBpbWJhbGFuY2UgY3JlYXRlZCBieSBhIDc1JSBmb3J3YXJkIHBhc3MgcmF0ZSBhbmQgNTMuMyUgb2YgZXZlbnRzIGluIHRoZSBkYW5nZXIgem9uZSwgZGVzcGl0ZSB0aGUgYWJzZW5jZSBvZiBhIHN0cnVjdHVyZWQgdGFjdGljYWwgcGF0dGVybi4gV2F0Y2ggZm9yIHRoZSBuZXh0IDMtNSBtaW51dGVzIHRvIHNlZSBpZiB0aGUgNzUlIHBhc3MgYWNjdXJhY3kgaG9sZHMgdW5kZXIgdGhlIDIuMCBwcmVzc3VyZSBldmVudHMsIGFzIGEgZHJvcCBpbiBhY2N1cmFjeSBhZ2FpbnN0IGhpZ2ggZm9yd2FyZCBpbnRlbnQgd2lsbCBsaWtlbHkgdHJpZ2dlciBhIGNvdW50ZXItYXR0YWNrLiIsImZhbiI6IlRoZSBob21lIHRlYW0gaXMgcmVhbGx5IHJhbXBpbmcgdXAgdGhlaXIgcHJlc3N1cmUsIHB1c2hpbmcgbW9yZSB0aGFuIGhhbGYgdGhlaXIgYXR0YWNrcyBkaXJlY3RseSBpbnRvIHRoZSBkYW5nZXIgem9uZSEgV2l0aCBvbmx5IGEgZmV3IG1pbnV0ZXMgb24gdGhlIGNsb2NrLCB5b3UgY2FuIGZlZWwgdGhlIHJoeXRobSBidWlsZGluZyB1cCBmb3IgYSBodWdlIGJyZWFrdGhyb3VnaC4ifSx7Im1pbnV0ZSI6NDUsInRlbnNpb24iOjQ2LjksInN0YXRzIjp7Im1pbnV0ZSI6NDUuMCwicGFzc2VzIjo3LjAsInNob3RzIjoxLjAsInByZXNzdXJlcyI6NS4wLCJwYXNzX2FjY3VyYWN5Ijo3MS40MDAwMDE1MjU4Nzg5LCJpbl9kYW5nZXJfem9uZV9wY3QiOjIwLjAsInRlYW1zX2luX3dpbmRvdyI6WyJBcnNlbmFsIiwiTWFuY2hlc3RlciBDaXR5Il0sImZvcndhcmRfcGFzc19yYXRlIjo3MS40MDAwMDE1MjU4Nzg5fSwicGF0dGVybnMiOltdLCJhbmFseXN0IjoiV2l0aCBubyBhY3RpdmUgdGFjdGljYWwgcGF0dGVybnMgZGV0ZWN0ZWQgYW5kIG9ubHkgMjAlIG9mIGV2ZW50cyBpbiB0aGUgZGFuZ2VyIHpvbmUsIHRoZSBtaWQtbWF0Y2ggdGVuc2lvbiBhdCA0Ni45IHJlZmxlY3RzIGEgbG93LWludGVuc2l0eSB0cmFuc2l0aW9uYWwgcGhhc2UgcmF0aGVyIHRoYW4gaW1tZWRpYXRlIHRocmVhdC4gTW9uaXRvciB0aGUgNzElIGZvcndhcmQgcGFzcyByYXRlIG92ZXIgdGhlIG5leHQgMy01IG1pbnV0ZXMgZm9yIGEgc3VkZGVuIHZlcnRpY2FsIHN1cmdlLCBhcyB0aGUgNSBwcmVzc3VyZSBldmVudHMgc3VnZ2VzdCB0aGUgb3Bwb3NpbmcgZGVmZW5zZSBpcyBhY3RpdmVseSB0cmlnZ2VyaW5nIGEgaGlnaC1saW5lIHRyYXAgdGhhdCBjb3VsZCBiZSBleHBsb2l0ZWQgYnkgYSBxdWljayB0aGlyZC1tYW4gcnVuLiIsImZhbiI6IldlXHUyMDE5cmUgaGl0dGluZyB0aGUgaGFsZnRpbWUgd2hpc3RsZSB3aXRoIHRoZSB0ZW5zaW9uIGRpYWwgdHVybmluZyB1cCBhbmQgdGhlIGF0dGFja2VycyByZWFsbHkgcHJlc3NpbmcgZm9yIHRoZSBsZWFkISBZb3UgY2FuIGZlZWwgdGhlIGVsZWN0cmljaXR5IGJ1aWxkaW5nIGluIHRoZSBhaXJcdTIwMTRnZXQgcmVhZHkgZm9yIGEgc2Vjb25kIGhhbGYgdGhhdFx1MjAxOXMgZ29pbmcgdG8gYmUgYWJzb2x1dGVseSBlbGVjdHJpYy4ifV19'));
+let mode='analyst',cur=null;
 
-function setMode(mode) {
-  currentMode = mode;
-  document.getElementById('tab-analyst').className = mode==='analyst' ? 'mode-tab active-analyst' : 'mode-tab inactive';
-  document.getElementById('tab-fan').className = mode==='fan' ? 'mode-tab active-fan' : 'mode-tab inactive';
-  const box = document.getElementById('narrative-box');
-  box.className = 'narrative-text' + (mode==='fan' ? ' fan-mode' : '');
-  box.textContent = narrativeData[mode] || '...';
+function tc(t){return t<30?'#10b981':t<60?'#f59e0b':'#ef4444'}
+
+function drawSpark(){
+  const tl=DATA.timeline,svg=document.getElementById('spark');
+  const maxT=Math.max(...tl.map(t=>t.tension),1),W=700,H=90,p=6;
+  const pts=tl.map((t,i)=>[p+(i/(tl.length-1||1))*(W-p*2), H-p-(t.tension/maxT)*(H-p*2)]);
+  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const fill=d+' L'+pts[pts.length-1][0]+','+(H-p)+' L'+pts[0][0]+','+(H-p)+' Z';
+  svg.innerHTML=`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#00d4ff" stop-opacity=".35"/>
+    <stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>
+  </linearGradient></defs>
+  <path d="${fill}" fill="url(#g)"/>
+  <path d="${d}" fill="none" stroke="#00d4ff" stroke-width="2.5"/>
+  ${DATA.key_moments.map((km,ki)=>{
+    const idx=tl.findIndex(t=>t.minute===km.minute);
+    if(idx<0)return '';
+    const [x,y]=pts[idx];
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="6" fill="${tc(km.tension)}" stroke="#080c14" stroke-width="2" style="cursor:pointer" onclick="sel(${ki})"/>`;
+  }).join('')}`;
 }
 
-async function startMatch() {
-  const home = document.getElementById('home-select').value;
-  const away = document.getElementById('away-select').value;
-  if (home === away) { alert('Please select different teams'); return; }
-
-  document.getElementById('start-btn').disabled = true;
-  document.getElementById('start-btn').textContent = '⏳ Loading...';
-
-  const res = await fetch(`/match/start?home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`,
-    { method: 'POST' });
-  const data = await res.json();
-  totalEvents = data.total_events;
-
-  document.getElementById('home-name').textContent = home;
-  document.getElementById('away-name').textContent = away;
-  document.getElementById('home-score').textContent = '0';
-  document.getElementById('away-score').textContent = '0';
-  document.getElementById('status-badge').className = 'status-badge status-live';
-  document.getElementById('status-badge').textContent = '● LIVE';
-  document.getElementById('start-btn').textContent = '⏹ Running...';
-
-  if (tickInterval) clearInterval(tickInterval);
-  tickInterval = setInterval(tick, 1200);
+function renderMoments(){
+  document.getElementById('ml').innerHTML=DATA.key_moments.map((km,i)=>`
+    <div class="mc" id="mc${i}" onclick="sel(${i})">
+      <div class="mh">
+        <span class="mmin">⏱ Minute ${km.minute}</span>
+        <span class="mten" style="color:${tc(km.tension)}">${km.tension}</span>
+      </div>
+      ${km.patterns&&km.patterns.length?`<div class="mpats">${km.patterns.map(p=>`<span class="ptag">${p}</span>`).join('')}</div>`:''}
+    </div>`).join('');
+  const best=DATA.key_moments.reduce((a,b,i)=>b.tension>a.t?{i,t:b.tension}:a,{i:0,t:0});
+  sel(best.i);
 }
 
-async function tick() {
-  const res = await fetch('/match/tick?events_per_tick=8', { method: 'POST' });
-  const state = await res.json();
-
-  if (state.status === 'finished' || !state.running) {
-    clearInterval(tickInterval);
-    document.getElementById('status-badge').className = 'status-badge status-idle';
-    document.getElementById('status-badge').textContent = 'FT';
-    document.getElementById('start-btn').disabled = false;
-    document.getElementById('start-btn').textContent = '▶ New Match';
-    return;
-  }
-
-  updateUI(state);
+function sel(i){
+  cur=i;
+  const km=DATA.key_moments[i];
+  document.querySelectorAll('.mc').forEach((c,j)=>c.className='mc'+(j===i?' active':''));
+  const t=parseFloat(km.tension);
+  document.getElementById('tv').textContent=t.toFixed(1);
+  document.getElementById('tv').style.color=tc(t);
+  document.getElementById('tf').style.width=t+'%';
+  document.getElementById('tf').style.background=`linear-gradient(90deg,${tc(t)},${t>60?'#ff6b6b':'#fbbf24'})`;
+  document.getElementById('cm').textContent=km.minute;
+  document.getElementById('imn').textContent='Minute '+km.minute;
+  const b=document.getElementById('ib');
+  b.textContent='Tension: '+t.toFixed(1)+'/100';
+  b.style.cssText=`background:${tc(t)}22;color:${tc(t)};border:1px solid ${tc(t)}44;`;
+  document.getElementById('it').textContent=mode==='analyst'?(km.analyst||'—'):(km.fan||'—');
+  const s=km.stats||{};
+  document.getElementById('sp').textContent=s.passes??'—';
+  document.getElementById('sa').textContent=typeof s.pass_accuracy==='number'?s.pass_accuracy.toFixed(0)+'%':'—';
+  document.getElementById('ss').textContent=s.shots??'—';
+  document.getElementById('spr').textContent=s.pressures??'—';
+  document.getElementById('sd').textContent=typeof s.in_danger_zone_pct==='number'?s.in_danger_zone_pct.toFixed(1)+'%':'—';
+  document.getElementById('sf').textContent=typeof s.forward_pass_rate==='number'?s.forward_pass_rate.toFixed(0)+'%':'—';
 }
 
-function updateUI(state) {
-  const t = state.tension || 0;
-
-  // Tension number + color
-  const tEl = document.getElementById('tension-num');
-  tEl.textContent = Math.round(t);
-  tEl.className = 'tension-number ' + (t > 65 ? 'high' : t > 35 ? 'med' : 'low');
-
-  // Tension label
-  const labels = [[75,'💥 EXPLOSIVE'],[55,'⚡ HIGH'],[35,'🔥 BUILDING'],[15,'👀 SIMMERING'],[0,'😌 Quiet']];
-  const [,label] = labels.find(([thresh]) => t >= thresh) || [0,'😌 Quiet'];
-  const colors  = {'💥 EXPLOSIVE':'var(--red)','⚡ HIGH':'var(--amber)','🔥 BUILDING':'var(--amber)','👀 SIMMERING':'var(--accent)','😌 Quiet':'var(--green)'};
-  document.getElementById('tension-label').textContent = label;
-  document.getElementById('tension-label').style.color = colors[label] || 'var(--green)';
-
-  // Bar
-  const bar = document.getElementById('tension-bar');
-  bar.style.width = t + '%';
-  bar.style.background = t>65 ? 'linear-gradient(90deg,var(--amber),var(--red))' :
-                         t>35 ? 'linear-gradient(90deg,var(--accent),var(--amber))' :
-                                'linear-gradient(90deg,var(--green),var(--accent))';
-
-  // Match clock
-  document.getElementById('match-minute').textContent = state.minute || 0;
-
-  // Progress
-  const prog = totalEvents > 0 ? Math.min((state.events_processed / totalEvents) * 100, 100) : 0;
-  document.getElementById('match-progress').style.width = prog + '%';
-  document.getElementById('events-label').textContent = (state.events_processed||0) + ' / ' + totalEvents + ' events';
-
-  // Score
-  const score = state.score || {};
-  const teams = Object.keys(score);
-  if (teams.length >= 2) {
-    document.getElementById('home-score').textContent = score[document.getElementById('home-name').textContent] || 0;
-    document.getElementById('away-score').textContent = score[document.getElementById('away-name').textContent] || 0;
-  }
-
-  // Sparkline
-  const hist = state.tension_history || [];
-  const spark = document.getElementById('sparkline');
-  if (hist.length > 1) {
-    const max = Math.max(...hist.map(h=>h.tension), 1);
-    spark.innerHTML = hist.slice(-60).map(h => {
-      const pct = (h.tension/max)*100;
-      const col = h.tension>65?'var(--red)':h.tension>35?'var(--amber)':'var(--accent)';
-      return `<div class="spark-bar" style="height:${pct}%;background:${col};opacity:0.7"></div>`;
-    }).join('');
-  }
-
-  // Patterns
-  const patterns = state.patterns || [];
-  const plist = document.getElementById('patterns-list');
-  if (patterns.length === 0) {
-    plist.innerHTML = '<div class="no-patterns">No significant patterns detected</div>';
-  } else {
-    plist.innerHTML = patterns.map(p => `
-      <div class="pattern-chip ${p.severity}">
-        <div class="severity-dot sev-${p.severity}"></div>
-        <div>
-          <div class="pattern-name">${p.name}</div>
-          <div class="pattern-desc">${p.description}</div>
-        </div>
-      </div>`).join('');
-  }
-
-  // Narrative
-  const insight = state.last_insight || {};
-  narrativeData = { analyst: insight.analyst || '', fan: insight.fan || '' };
-  const box = document.getElementById('narrative-box');
-  if (narrativeData[currentMode]) {
-    box.style.opacity = '0';
-    setTimeout(() => {
-      box.textContent = narrativeData[currentMode];
-      box.style.opacity = '1';
-    }, 200);
-    document.getElementById('narrative-minute').textContent = state.minute || '—';
-  }
-
-  // Stats
-  const s = state.stats || {};
-  document.getElementById('s-passes').textContent   = s.passes || 0;
-  document.getElementById('s-accuracy').textContent = (s.pass_accuracy || 0) + '%';
-  document.getElementById('s-shots').textContent    = s.shots || 0;
-  document.getElementById('s-press').textContent    = s.pressures || 0;
-  document.getElementById('s-danger').textContent   = (s.in_danger_zone_pct || 0) + '%';
-  document.getElementById('s-fwd').textContent      = (s.forward_pass_rate || 0) + '%';
-
-  // Event feed
-  const evs = state.recent_events || [];
-  const elist = document.getElementById('events-list');
-  if (evs.length) {
-    const html = evs.reverse().map(e => {
-      const cls = e.type==='Shot'&&e.outcome==='Goal'?'event-row event-goal':
-                  e.type==='Shot'?'event-row event-shot':'event-row';
-      const icon = {'Pass':'↗','Shot':'⚽','Carry':'→','Pressure':'⚡','Tackle':'✋',
-                    'Goal':'🎯','Dribble':'🌀','Clearance':'💨'}[e.type]||'·';
-      return `<div class="${cls}">
-        <span class="event-type">${icon} ${e.type}</span>
-        <span class="event-player">${e.player||''}</span>
-        <span class="event-min">${e.minute||0}'</span>
-      </div>`;
-    }).join('');
-    elist.innerHTML = html + elist.innerHTML;
-    // keep max 20 items
-    while (elist.children.length > 20) elist.removeChild(elist.lastChild);
-  }
+function setMode(m){
+  mode=m;
+  document.getElementById('ba').className='mbtn'+(m==='analyst'?' active':'');
+  document.getElementById('bf').className='mbtn'+(m==='fan'?' active':'');
+  document.getElementById('iml').textContent=m==='analyst'?'🔬 Tactical Analyst Mode':'🎉 Casual Fan Mode';
+  if(cur!==null)sel(cur);
 }
+
+document.getElementById('hn').textContent=DATA.home;
+document.getElementById('an').textContent=DATA.away;
+document.getElementById('hs').textContent=DATA.score?.home??0;
+document.getElementById('as').textContent=DATA.score?.away??0;
+drawSpark();
+renderMoments();
 </script>
 </body>
 </html>

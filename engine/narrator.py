@@ -32,7 +32,7 @@ def _get_client():
 
 def _build_context(state: dict) -> str:
     stats   = state.get("stats", {})
-    patterns = [p["name"] for p in state.get("patterns", [])]
+    patterns = [p["name"] if isinstance(p, dict) else p for p in state.get("patterns", [])]
     tension  = state.get("tension", 0)
     return (
         f"Match minute: {stats.get('minute', '?')}\n"
