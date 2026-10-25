@@ -1,0 +1,26 @@
+# Azure Container Apps deployment configuration
+# Deploy with: az containerapp up --name sixth-sense --resource-group Aihackathon --source .
+
+properties:
+  configuration:
+    ingress:
+      external: true
+      targetPort: 8000
+    secrets:
+      - name: groq-api-key
+        value: "${GROQ_API_KEY}"
+  template:
+    containers:
+      - name: sixth-sense
+        image: sixth-sense:latest
+        resources:
+          cpu: 0.5
+          memory: 1Gi
+        env:
+          - name: GROQ_API_KEY
+            secretRef: groq-api-key
+          - name: PORT
+            value: "8000"
+    scale:
+      minReplicas: 1
+      maxReplicas: 3

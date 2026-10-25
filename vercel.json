@@ -1,0 +1,11 @@
+{
+  "builds": [
+    { "src": "vercel_app/index.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "vercel_app/index.py" }
+  ],
+  "env": {
+    "GROQ_API_KEY": "@groq_api_key"
+  }
+}
